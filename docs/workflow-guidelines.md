@@ -330,6 +330,14 @@ APP_SERVICE_NAME=prod-webApp-name
 ENVIRONMENT=Production
 ```
 
+### Action Secrets and Variables
+- OPENAI_API_URL
+- OPENAI_API_KEY
+- AZURE_TENANT_ID
+- AZURE_SUBSCRIPTION_ID
+- AZURE_CLIENT_ID
+- APP_SERVICE_NAME
+- AZURE_STORAGE_ACCOUNT
 ---
 
 ## Release Management
