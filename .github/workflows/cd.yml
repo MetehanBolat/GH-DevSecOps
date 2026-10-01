@@ -1,0 +1,108 @@
+name: Continuous Deployment
+run-name: >-
+  Deploy | ${{ github.ref_name }} | ${{ github.event_name == 'workflow_dispatch'
+    && 'manual'
+    || 'merge' }}
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  dev-tf-plan:
+    uses: $/.github/workflows/_template-tf-plan.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: dev
+      instance_directory: "./iac"
+    secrets: inherit
+
+  dev-tf-apply:
+    needs: dev-tf-plan
+    uses: $/.github/workflows/_template-tf-apply.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: dev
+      github_environment: Development
+      instance_directory: "./iac"
+    secrets: inherit
+
+  dev-build:
+    needs: dev-tf-apply
+    uses: $/.github/workflows/_template-build.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: Development
+      environment_code: dev
+    secrets: inherit
+
+  dev-deploy:
+    needs: dev-build
+    uses: $/.github/workflows/_template-deploy.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: Development
+      package_name: ${{ needs.dev-build.outputs.package_name }}
+    secrets: inherit
+
+  prod-tf-plan:
+    needs: dev-deploy
+    uses: $/.github/workflows/_template-tf-plan.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: prod
+      instance_directory: "./iac"
+    secrets: inherit
+
+  prod-tf-apply:
+    needs: prod-tf-plan
+    uses: $/.github/workflows/_template-tf-apply.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: prod
+      github_environment: Production
+      instance_directory: "./iac"
+    secrets: inherit
+
+  prod-build:
+    needs: prod-tf-apply
+    uses: $/.github/workflows/_template-build.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: Production
+      environment_code: prod
+    secrets: inherit
+
+  prod-deploy:
+    needs: prod-build
+    uses: $/.github/workflows/_template-deploy.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: Production
+      package_name: ${{ needs.prod-build.outputs.package_name }}
+    secrets: inherit

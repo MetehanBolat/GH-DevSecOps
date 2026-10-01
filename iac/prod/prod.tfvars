@@ -1,0 +1,4 @@
+location = "swedencentral"
+resourcePrefix = "gh-devsecops"
+environment = "prod"
+subscription_id="de476170-ae21-4680-b339-2276fa03d958"

@@ -1,0 +1,76 @@
+name: Continuous Integration and Security
+run-name: >-
+  CI | ${{ github.event_name == 'pull_request'
+    && format('PR #{0} | {1}', github.event.pull_request.number, github.event.pull_request.title)
+    || format('{0} | {1}', github.event_name, github.ref_name) }}
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read # Read repository contents
+
+concurrency:
+  group: tfplan-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate site
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      #- name: Check JavaScript syntax
+      #  run: node --check src/script.js
+
+      - name: Check for accidental secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  workflow-security:
+    name: Review workflow security
+    permissions:
+      security-events: write # Update sec events
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan GitHub Actions workflows
+        uses: zizmorcore/zizmor-action@v0.2.0
+        with:
+          persona: pedantic
+
+  dev:
+    permissions:
+      contents: read #read repository content
+      id-token: write #write id tokens
+    uses: $/.github/workflows/_template-tf-plan.yml
+    with:
+      environment: dev
+      instance_directory: "./iac"
+    secrets: inherit
+
+  prod:
+    permissions:
+      contents: read #read repository content
+      id-token: write #write id tokens
+    uses: $/.github/workflows/_template-tf-plan.yml
+    with:
+      environment: prod
+      instance_directory: './iac'
+    secrets: inherit

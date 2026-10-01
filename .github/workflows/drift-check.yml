@@ -1,0 +1,84 @@
+name: Issue drift check
+run-name: >-
+  Drift check | ${{ github.event.pull_request
+    && format('PR #{0}', github.event.pull_request.number)
+    || format('manual PR #{0}', inputs.pull_request_number) }}
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: Pull request number to inspect
+        required: true
+        type: string
+      model:
+        description: Model to use for the drift check
+        required: true
+        default: gpt-5.4-mini
+        type: choice
+        options:
+          - gpt-5.4-mini
+          - gpt-5.4
+          - claude-sonnet-5
+
+permissions:
+  contents: read # read repository content
+  issues: read # read issues content
+  pull-requests: read # read pr content
+
+concurrency:
+  group: drift-check-${{ github.event.pull_request.number || inputs.pull_request_number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check issue and PR alignment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          
+      - name: Resolve linked issue
+        id: issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pull_request_number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$HEAD_REF" ]]; then
+            HEAD_REF="$(gh api "repos/$REPOSITORY/pulls/$PR_NUMBER" --jq '.head.ref')"
+          fi
+          if [[ ! "$HEAD_REF" =~ ^feature/([0-9]+)(-|$) ]]; then
+            echo "Feature branches must use feature/<issue-number>-<short-name>." >&2
+            exit 1
+          fi
+          issue_number="${BASH_REMATCH[1]}"
+          echo "number=$issue_number" >> "$GITHUB_OUTPUT"
+
+      - name: Ask OpenAI to check for drift
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_API_URL: ${{ vars.OPENAI_API_URL }}
+          OPENAI_MODEL: ${{ inputs.model || 'gpt-5.4-mini' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pull_request_number }}
+        run: |
+          set -euo pipefail
+          : "${OPENAI_API_KEY:?Configure OPENAI_API_KEY in the Github Actions Secrets}"
+          : "${OPENAI_API_URL:?Configure OPENAI_API_URL in the Github Actions Variables}"
+          : "${OPENAI_MODEL:?Select a model in the workflow input}"
+          : "${GITHUB_TOKEN:?GitHub token is required to read issue and PR metadata}"
+
+          python3 scripts/drift_check.py \
+            --issue-number "$ISSUE_NUMBER" \
+            --pr-number "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY"

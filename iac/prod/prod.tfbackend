@@ -1,0 +1,5 @@
+storage_account_name="sadefaultswc"
+container_name="tfstate"
+key="prod/gh-devsecops.tfstate"
+resource_group_name="default-rg"
+subscription_id="de476170-ae21-4680-b339-2276fa03d958"
