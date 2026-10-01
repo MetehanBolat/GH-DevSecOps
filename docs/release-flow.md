@@ -66,7 +66,7 @@ application jobs.
 
 The infrastructure release is implemented by
 [`tf-apply.yml`](../.github/workflows/tf-apply.yml), which calls
-[`terraform-apply-template.yml`](../.github/workflows/terraform-apply-template.yml)
+[`_template-tf-apply.yml`](../.github/workflows/_template-tf-apply.yml)
 for each environment:
 
 ```mermaid
@@ -115,7 +115,7 @@ approval.
 ### Terraform plan checks
 
 [`tf-plan.yml`](../.github/workflows/tf-plan.yml) calls
-[`terraform-plan-template.yml`](../.github/workflows/terraform-plan-template.yml)
+[`_template-tf-plan.yml`](../.github/workflows/_template-tf-plan.yml)
 for both `dev` and `prod`. It performs checkout, Terraform setup, Azure OIDC
 login, backend initialization, validation, planning, and plan summarization.
 It does not run `terraform apply`. This makes the proposed infrastructure
@@ -129,19 +129,19 @@ entry workflows support a manual `instanceDirectory` override.
 
 ```mermaid
 flowchart LR
-    CD["cd.yml<br/>entry workflow"] --> B["build-template.yml<br/>reusable build"]
-    CD --> D["deploy-template.yml<br/>reusable deploy"]
+    CD["cd.yml<br/>entry workflow"] --> B["_template-build.yml<br/>reusable build"]
+    CD --> D["_template-deploy.yml<br/>reusable deploy"]
     B --> S["Azure Blob Storage<br/>release container"]
     S --> D
     D --> A["Azure App Service"]
 ```
 
-| Workflow/job | Responsibility | Gate or output |
-| --- | --- | --- |
-| `dev-build` | Calls `build-template.yml` for `Development` with environment code `dev`. | Publishes `package_name`. |
-| `dev-deploy` | Calls `deploy-template.yml` for `Development` using the build output. | Must succeed before `prod-build`. |
-| `prod-build` | Calls `build-template.yml` for `Production` with environment code `prod`. | Publishes `package_name`. |
-| `prod-deploy` | Calls `deploy-template.yml` for `Production` using the build output. | Final release step. |
+| Workflow/job  | Responsibility                                                             | Gate or output                    |
+| ------------- | -------------------------------------------------------------------------- | --------------------------------- |
+| `dev-build`   | Calls `_template-build.yml` for `Development` with environment code `dev`. | Publishes `package_name`.         |
+| `dev-deploy`  | Calls `_template-deploy.yml` for `Development` using the build output.     | Must succeed before `prod-build`. |
+| `prod-build`  | Calls `_template-build.yml` for `Production` with environment code `prod`. | Publishes `package_name`.         |
+| `prod-deploy` | Calls `_template-deploy.yml` for `Production` using the build output.      | Final release step.               |
 
 The entry workflow owns ordering with `needs`. The reusable templates own the
 steps that run on the GitHub-hosted runner. Secrets are inherited from the
@@ -151,7 +151,7 @@ permission for OIDC login.
 ## Detailed build job
 
 The `build` job in
-[`build-template.yml`](../.github/workflows/build-template.yml) runs on
+[`_template-build.yml`](../.github/workflows/_template-build.yml) runs on
 `ubuntu-latest` and selects the GitHub environment supplied by the caller.
 
 ```mermaid
@@ -186,7 +186,7 @@ passed as a GitHub Actions artifact; it is stored in Azure Blob Storage.
 ## Detailed deploy job
 
 The `deploy` job in
-[`deploy-template.yml`](../.github/workflows/deploy-template.yml) runs on
+[`_template-deploy.yml`](../.github/workflows/_template-deploy.yml) runs on
 `ubuntu-latest` and receives the filename produced by its preceding build.
 
 ```mermaid
@@ -248,7 +248,7 @@ Packages remain in the `release` container under their timestamped names.
 The current `cd.yml` entry workflow always creates a new package, so it does
 not yet expose a manual package-selection input for rollback. A rollback
 implementation should pass a selected existing filename to
-`deploy-template.yml`; the deployment operation itself is immutable because it
+`_template-deploy.yml`; the deployment operation itself is immutable because it
 downloads and deploys the exact filename supplied to the deploy template.
 
 ## Source of truth
@@ -256,15 +256,15 @@ downloads and deploys the exact filename supplied to the deploy template.
 - Infrastructure orchestration: [`tf-plan.yml`](../.github/workflows/tf-plan.yml)
   and [`tf-apply.yml`](../.github/workflows/tf-apply.yml)
 - Terraform reusable workflows:
-  [`terraform-plan-template.yml`](../.github/workflows/terraform-plan-template.yml)
+  [`_template-tf-plan.yml`](../.github/workflows/_template-tf-plan.yml)
   and
-  [`terraform-apply-template.yml`](../.github/workflows/terraform-apply-template.yml)
+  [`_template-tf-apply.yml`](../.github/workflows/_template-tf-apply.yml)
 - Terraform operations:
   [`terraform-plan/action.yml`](../.github/actions/terraform-plan/action.yml)
   and
   [`terraform-apply/action.yml`](../.github/actions/terraform-apply/action.yml)
 - Orchestration: [`cd.yml`](../.github/workflows/cd.yml)
-- Build implementation: [`build-template.yml`](../.github/workflows/build-template.yml)
-- Deploy implementation: [`deploy-template.yml`](../.github/workflows/deploy-template.yml)
+- Build implementation: [`_template-build.yml`](../.github/workflows/_template-build.yml)
+- Deploy implementation: [`_template-deploy.yml`](../.github/workflows/_template-deploy.yml)
 - Terraform root configuration: [`iac/main.tf`](../iac/main.tf)
 - Azure resources: [`iac/_modules/spa/main.tf`](../iac/_modules/spa/main.tf)

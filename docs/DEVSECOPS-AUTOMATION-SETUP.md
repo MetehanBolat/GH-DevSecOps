@@ -6,16 +6,16 @@ implemented in local composite actions and reusable workflow templates.
 
 The continuous deployment entry point is
 [`cd.yml`](../.github/workflows/cd.yml). It calls the reusable
-[`build-template.yml`](../.github/workflows/build-template.yml) and
-[`deploy-template.yml`](../.github/workflows/deploy-template.yml) workflows
+[`_template-build.yml`](../.github/workflows/_template-build.yml) and
+[`_template-deploy.yml`](../.github/workflows/_template-deploy.yml) workflows
 for the Development and Production environments.
 
 Terraform uses the same two-layer pattern. The
 [`tf-plan.yml`](../.github/workflows/tf-plan.yml) and
 [`tf-apply.yml`](../.github/workflows/tf-apply.yml) entry points call
-[`terraform-plan-template.yml`](../.github/workflows/terraform-plan-template.yml)
+[`_template-tf-plan.yml`](../.github/workflows/_template-tf-plan.yml)
 and
-[`terraform-apply-template.yml`](../.github/workflows/terraform-apply-template.yml).
+[`_template-tf-apply.yml`](../.github/workflows/_template-tf-apply.yml).
 Those reusable workflows provide the job-level configuration and call the
 local Terraform composite actions for the Terraform commands.
 

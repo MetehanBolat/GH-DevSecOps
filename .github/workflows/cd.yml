@@ -1,4 +1,4 @@
-name: Deploy DTAP application
+name: Continuous Deployment
 run-name: >-
   Deploy | ${{ github.ref_name }} | ${{ github.event_name == 'workflow_dispatch'
     && 'manual'
@@ -14,12 +14,35 @@ permissions:
   contents: read
 
 concurrency:
-  group: dtap-${{ github.ref }}
+  group: cd-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  dev-tf-plan:
+    uses: $/.github/workflows/_template-tf-plan.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: dev
+      instance_directory: "./iac"
+    secrets: inherit
+
+  dev-tf-apply:
+    needs: dev-tf-plan
+    uses: $/.github/workflows/_template-tf-apply.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: dev
+      github_environment: Development
+      instance_directory: "./iac"
+    secrets: inherit
+
   dev-build:
-    uses: $/.github/workflows/build-template.yml
+    needs: dev-tf-apply
+    uses: $/.github/workflows/_template-build.yml
     permissions:
       contents: read
       id-token: write
@@ -30,7 +53,7 @@ jobs:
 
   dev-deploy:
     needs: dev-build
-    uses: $/.github/workflows/deploy-template.yml
+    uses: $/.github/workflows/_template-deploy.yml
     permissions:
       contents: read
       id-token: write
@@ -39,9 +62,32 @@ jobs:
       package_name: ${{ needs.dev-build.outputs.package_name }}
     secrets: inherit
 
-  prod-build:
+  prod-tf-plan:
     needs: dev-deploy
-    uses: $/.github/workflows/build-template.yml
+    uses: $/.github/workflows/_template-tf-plan.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: prod
+      instance_directory: "./iac"
+    secrets: inherit
+
+  prod-tf-apply:
+    needs: prod-tf-plan
+    uses: $/.github/workflows/_template-tf-apply.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      environment: prod
+      github_environment: Production
+      instance_directory: "./iac"
+    secrets: inherit
+
+  prod-build:
+    needs: prod-tf-apply
+    uses: $/.github/workflows/_template-build.yml
     permissions:
       contents: read
       id-token: write
@@ -52,7 +98,7 @@ jobs:
 
   prod-deploy:
     needs: prod-build
-    uses: $/.github/workflows/deploy-template.yml
+    uses: $/.github/workflows/_template-deploy.yml
     permissions:
       contents: read
       id-token: write

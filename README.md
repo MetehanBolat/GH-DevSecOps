@@ -4,14 +4,14 @@ This repository is a controlled, automated release process demonstration combini
 
 ## Start here
 
-| If you want to...                                   | Read                                                 |
-| --------------------------------------------------- | ---------------------------------------------------- |
-| Understand exactly what happens during a release    | [Application release flow](docs/release-flow.md)     |
-| Set up the repository and GitHub environments       | [DevSecOps Automation Setup](docs/DEVSECOPS-AUTOMATION-SETUP.md)                     |
-| Understand the Azure architecture and identity flow | [Architecture summary](docs/architecture-summary.md) |
-| Understand the scope and assumptions of this setup  | [Assumptions](docs/assumptions.md)                   |
-| Inspect the deployed SPA                            | [`src/`](src/)                                       |
-| Inspect the infrastructure definition               | [`iac/`](iac/)                                       |
+| If you want to...                                   | Read                                                             |
+| --------------------------------------------------- | ---------------------------------------------------------------- |
+| Understand exactly what happens during a release    | [Application release flow](docs/release-flow.md)                 |
+| Set up the repository and GitHub environments       | [DevSecOps Automation Setup](docs/DEVSECOPS-AUTOMATION-SETUP.md) |
+| Understand the Azure architecture and identity flow | [Architecture summary](docs/architecture-summary.md)             |
+| Understand the scope and assumptions of this setup  | [Assumptions](docs/assumptions.md)                               |
+| Inspect the deployed SPA                            | [`src/`](src/)                                                   |
+| Inspect the infrastructure definition               | [`iac/`](iac/)                                                   |
 
 The most important release document is
 [docs/release-flow.md](docs/release-flow.md). It contains the detailed
@@ -40,21 +40,21 @@ small static site to focus on the release and DevSecOps workflows.
 
 ## Repository map
 
-| Path                                                                                               | Purpose                                                                                    |
-| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [`src/`](src/)                                                                                     | Static SPA source: `index.html`, `styles.css`, and `script.js`.                            |
-| [`iac/`](iac/)                                                                                     | Root Terraform configuration, environment backends/variables, and the reusable SPA module. |
-| [`scripts/drift_check.py`](scripts/drift_check.py)                                                 | Collects issue, PR, patch, and final-file evidence for the issue drift check.              |
-| [`.github/workflows/ci.yml`](.github/workflows/ci.yml)                                             | Validates site files and JavaScript, scans for secrets, and scans workflows.               |
-| [`.github/workflows/drift-check.yml`](.github/workflows/drift-check.yml)                           | Checks whether a pull request implements its linked issue.                                 |
-| [`.github/workflows/cd.yml`](.github/workflows/cd.yml)                                             | Application release entry workflow.                                                        |
-| [`.github/workflows/build-template.yml`](.github/workflows/build-template.yml)                     | Reusable environment-specific build and Blob Storage upload workflow.                      |
-| [`.github/workflows/deploy-template.yml`](.github/workflows/deploy-template.yml)                   | Reusable Blob Storage download and App Service deployment workflow.                        |
-| [`.github/workflows/tf-plan.yml`](.github/workflows/tf-plan.yml)                                   | Terraform plan entry workflow for Development and Production.                              |
-| [`.github/workflows/tf-apply.yml`](.github/workflows/tf-apply.yml)                                 | Ordered Terraform apply entry workflow.                                                    |
-| [`.github/workflows/terraform-plan-template.yml`](.github/workflows/terraform-plan-template.yml)   | Reusable Terraform plan workflow.                                                          |
-| [`.github/workflows/terraform-apply-template.yml`](.github/workflows/terraform-apply-template.yml) | Reusable Terraform apply workflow.                                                         |
-| [`docs/`](docs/)                                                                                   | Setup, architecture, assumptions, and detailed release documentation.                      |
+| Path                                                                                   | Purpose                                                                                    |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [`src/`](src/)                                                                         | Static SPA source: `index.html`, `styles.css`, and `script.js`.                            |
+| [`iac/`](iac/)                                                                         | Root Terraform configuration, environment backends/variables, and the reusable SPA module. |
+| [`scripts/drift_check.py`](scripts/drift_check.py)                                     | Collects issue, PR, patch, and final-file evidence for the issue drift check.              |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml)                                 | Validates site files and JavaScript, scans for secrets, and scans workflows.               |
+| [`.github/workflows/drift-check.yml`](.github/workflows/drift-check.yml)               | Checks whether a pull request implements its linked issue.                                 |
+| [`.github/workflows/cd.yml`](.github/workflows/cd.yml)                                 | Application release entry workflow.                                                        |
+| [`.github/workflows/_template-build.yml`](.github/workflows/_template-build.yml)       | Reusable environment-specific build and Blob Storage upload workflow.                      |
+| [`.github/workflows/_template-deploy.yml`](.github/workflows/_template-deploy.yml)     | Reusable Blob Storage download and App Service deployment workflow.                        |
+| [`.github/workflows/tf-plan.yml`](.github/workflows/tf-plan.yml)                       | Terraform plan entry workflow for Development and Production.                              |
+| [`.github/workflows/tf-apply.yml`](.github/workflows/tf-apply.yml)                     | Ordered Terraform apply entry workflow.                                                    |
+| [`.github/workflows/_template-tf-plan.yml`](.github/workflows/_template-tf-plan.yml)   | Reusable Terraform plan workflow.                                                          |
+| [`.github/workflows/_template-tf-apply.yml`](.github/workflows/_template-tf-apply.yml) | Reusable Terraform apply workflow.                                                         |
+| [`docs/`](docs/)                                                                       | Setup, architecture, assumptions, and detailed release documentation.                      |
 
 ## Delivery lifecycle
 
