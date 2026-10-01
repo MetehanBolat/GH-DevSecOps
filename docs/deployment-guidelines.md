@@ -244,7 +244,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -302,7 +306,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -402,14 +410,14 @@ ENABLE_CSP=true
 
 ### Environment-Specific Deployments
 
-| Setting | Development | Production |
-|---------|-------------|------------|
-| **App Service Plan** | Consumption (Free tier) | Standard P1v2 |
-| **VNet Integration** | Optional | Required |
-| **Diagnostics Level** | Detailed | Minimal |
-| **Scaling** | 1 instance | 3+ instances |
-| **Session Affinity** | Disabled | Enabled |
-| **Health Checks** | Every 60s | Every 15s |
+| Setting               | Development             | Production    |
+| --------------------- | ----------------------- | ------------- |
+| **App Service Plan**  | Consumption (Free tier) | Standard P1v2 |
+| **VNet Integration**  | Optional                | Required      |
+| **Diagnostics Level** | Detailed                | Minimal       |
+| **Scaling**           | 1 instance              | 3+ instances  |
+| **Session Affinity**  | Disabled                | Enabled       |
+| **Health Checks**     | Every 60s               | Every 15s     |
 
 ---
 
