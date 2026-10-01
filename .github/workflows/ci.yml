@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read # Read repository contents
 
+concurrency:
+  group: tfplan-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   validate:
     name: Validate site
@@ -50,3 +54,23 @@ jobs:
         uses: zizmorcore/zizmor-action@v0.2.0
         with:
           persona: pedantic
+
+  dev:
+    permissions:
+      contents: read #read repository content
+      id-token: write #write id tokens
+    uses: $/.github/workflows/terraform-plan-template.yml
+    with:
+      environment: dev
+      instance_directory: "./iac"
+    secrets: inherit
+
+  prod:
+    permissions:
+      contents: read #read repository content
+      id-token: write #write id tokens
+    uses: $/.github/workflows/terraform-plan-template.yml
+    with:
+      environment: prod
+      instance_directory: './iac'
+    secrets: inherit
