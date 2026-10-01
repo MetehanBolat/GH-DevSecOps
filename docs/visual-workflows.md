@@ -30,8 +30,8 @@ graph TB
     E[main branch<br/>(protected)]:::issue
     
     subgraph Feature Development
-        F1[feature/issue-XXX]:::feature
-        F2[feature/issue-YYY]:::feature
+        F1[feature/XXX]:::feature
+        F2[feature/YYY]:::feature
     end
     
     subgraph Test Workflow
@@ -383,7 +383,7 @@ graph TB
 flowchart LR
     subgraph "Development Stage"
         D1[Developer] -->|1. Create Issue| D2[Github Issue Created]
-        D2 -->|2. Create Feature Branch| D3[feature/issue-XXX]
+        D2 -->|2. Create Feature Branch| D3[feature/XXX]
         D3 -->|3. Code & Test| D4[Tests Pass ✅]
     end
     
@@ -505,4 +505,4 @@ Include these diagrams in your documentation by:
 
 ---
 
-*Last updated: 2026-09-09*
+*Last updated: 2026-10-01*

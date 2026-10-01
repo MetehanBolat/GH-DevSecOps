@@ -23,9 +23,9 @@ This document provides detailed instructions and guidelines for developers worki
 ```
 main (protected) ←─┐
                     │ Pull Requests only, requires approval
-feature/issue-XXX  ├─→ Test Workflow runs on every commit
+feature/#-shortName ├─→ Test Workflow runs on every commit
                     │
-feature/issue-YYY   ├─→ Test Workflow runs on every commit
+where # = issueNumber
 ```
 
 ### Protected Branch Rules
@@ -41,14 +41,14 @@ feature/issue-YYY   ├─→ Test Workflow runs on every commit
 
 Use the following naming pattern:
 ```
-feature/issue-{issue-number}
-feature/issue-{issue-number}-{short-description}
+feature/{issue-number}
+feature/{issue-number}-{short-description}
 ```
 
 **Examples:**
-- `feature/issue-123`
-- `feature/issue-456-user-authentication`
-- `feature/issue-789-fix-login-bug`
+- `feature/123`
+- `feature/456-user-authentication`
+- `feature/789-fix-login-bug`
 
 **Never use:**
 - ❌ `main` or `master` for development
@@ -96,12 +96,12 @@ git checkout main
 git pull origin main
 
 # Create feature branch
-git checkout -b feature/issue-123-fix-login-timeout
+git checkout -b feature/123-fix-login-timeout
 
 # Commit initial state
 git add .
 git commit -m "chore: initial commit for issue-123"
-git push origin feature/issue-123-fix-login-timeout
+git push origin feature/123-fix-login-timeout
 ```
 
 ### Step 3: Make Changes and Commit
@@ -226,8 +226,6 @@ Reviewers should check:
 
 **Merge Options:**
 - **Squash and Merge**: Recommended for clean history
-- **Rebase and Merge**: Alternative option
-- **Create a Merge Commit**: Less preferred for main branch
 
 ---
 
@@ -235,11 +233,11 @@ Reviewers should check:
 
 ### Required Reviews
 
-| Change Type | Reviewers Required | Timeframe |
-|-------------|-------------------|-----------|
-| Bug fixes | 1 reviewer | Immediate |
-| Feature additions | 1+ reviewers | Within 24 hours |
-| Security changes | 2 reviewers | Within 12 hours |
+| Change Type          | Reviewers Required      | Timeframe       |
+| -------------------- | ----------------------- | --------------- |
+| Bug fixes            | 1 reviewer              | Immediate       |
+| Feature additions    | 1+ reviewers            | Within 24 hours |
+| Security changes     | 2 reviewers             | Within 12 hours |
 | Architecture changes | 2+ reviewers, tech lead | Within 24 hours |
 
 ### Reviewer Responsibilities
@@ -319,46 +317,22 @@ Development (dev.environment.app) → QA (qa.environment.app)
 → Pre-Production (pre-prod.environment.app) → Production (prod.environment.app)
 ```
 
-### Environment-Specific Configurations
-
-Each environment has its own configuration files:
-
-| File | Purpose | Example Value |
-|------|---------|---------------|
-| `.env.development` | Development settings | `NODE_ENV=development` |
-| `.env.qa` | QA testing settings | `NODE_ENV=qa` |
-| `.env.preprod` | Pre-prod testing | `NODE_ENV=pre-production` |
-| `.env.production` | Production settings | `NODE_ENV=production` |
-
 ### Environment Variables
 
 ```bash
 # Development
-AZURE_STATIC_WEB_APP_URL=https://dev.environment.app
-AZURE_BLOB_CONTAINER=dev-content
-
+AZURE_STORAGE_ACCOUNT=devstorageaccountname
+APP_SERVICE_NAME=dev-webApp-name
+ENVIRONMENT=Development
 # Production  
-AZURE_STATIC_WEB_APP_URL=https://prod.environment.app
-AZURE_BLOB_CONTAINER=prod-content
+AZURE_STORAGE_ACCOUNT=prodstorageaccountname
+APP_SERVICE_NAME=prod-webApp-name
+ENVIRONMENT=Production
 ```
 
 ---
 
 ## Release Management
-
-### Versioning Strategy
-
-Use semantic versioning for releases:
-
-```
-MAJOR.MINOR.PATCH-RELEASE-BUILD
-v1.0.0-beta.1+gabcdef123456789
-```
-
-**Examples:**
-- `v1.0.0` - Stable release to production
-- `v1.0.0-alpha.1` - Initial alpha build
-- `v1.0.0-beta.1+gc123def456789` - Beta build with commit hash
 
 ### Release Checklist
 
@@ -400,7 +374,7 @@ For critical production issues:
 
 1. Create hotfix branch from `main`:
    ```bash
-   git checkout -b hotfix/issue-XXX-hotfix-name main
+   git checkout -b hotfix/XXX-hotfix-name main
    ```
 
 2. Follow same PR and review process
@@ -448,11 +422,11 @@ If automated workflow fails:
 
 ### Documentation
 
-| Document | Purpose |
-|----------|---------|
-| [architecture-summary.md](<docs/architecture-summary.md>) | Azure infrastructure options |
-| [assumptions.md](<docs/assumptions.md>) | Organizational and technical assumptions |
-| This document | Workflow procedures and best practices |
+| Document                                                  | Purpose                                  |
+| --------------------------------------------------------- | ---------------------------------------- |
+| [architecture-summary.md](<docs/architecture-summary.md>) | Azure infrastructure options             |
+| [assumptions.md](<docs/assumptions.md>)                   | Organizational and technical assumptions |
+| This document                                             | Workflow procedures and best practices   |
 
 ### Getting Help
 
@@ -462,6 +436,6 @@ If automated workflow fails:
 
 ---
 
-*Last updated: 2026-09-09*
+*Last updated: 2026-10-01*
 
 **Note**: This PoC demonstrates the full workflow. Production implementations may add additional stages (QA, pre-prod) between development and production environments.

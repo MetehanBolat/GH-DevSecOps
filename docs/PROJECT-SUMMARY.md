@@ -35,13 +35,13 @@
 
 ### Success Criteria ✅
 
-| Metric | Target |
-|--------|--------|
-| Code Review Required | 100% of PRs to main |
-| Tests Run Before Merge | 100% automated |
-| Production Deployments with Approval | 100% enforced |
-| Direct Commits to Main | 0 instances |
-| Automated Test Failures Blocking Build | 100% effective |
+| Metric                                 | Target              |
+| -------------------------------------- | ------------------- |
+| Code Review Required                   | 100% of PRs to main |
+| Tests Run Before Merge                 | 100% automated      |
+| Production Deployments with Approval   | 100% enforced       |
+| Direct Commits to Main                 | 0 instances         |
+| Automated Test Failures Blocking Build | 100% effective      |
 
 ---
 
@@ -86,7 +86,7 @@
 ```
 GitHub Issue Created
       ↓
-Feature Branch Created (feature/issue-XXX)
+Feature Branch Created (feature/XXX-shortName)
       ↓
 Developer Codes & Commits → Test Workflow Runs Automatically
       ↓
@@ -101,22 +101,22 @@ Production Tests Run → Deploy to Azure Environment
 
 ### Branch Rules (Enforced by GitHub)
 
-| Rule | Status | Enforced By |
-|------|--------|-------------|
-| Protected main branch | ✅ Required | GitHub settings |
-| Pull requests only | ✅ Required | GitHub settings |
-| Minimum approvals (1+) | ✅ Required | GitHub settings |
+| Rule                    | Status     | Enforced By     |
+| ----------------------- | ---------- | --------------- |
+| Protected main branch   | ✅ Required | GitHub settings |
+| Pull requests only      | ✅ Required | GitHub settings |
+| Minimum approvals (1+)  | ✅ Required | GitHub settings |
 | Status checks must pass | ✅ Required | GitHub settings |
 | Branch protection rules | ✅ Required | GitHub settings |
 
 ### Workflow Triggers
 
-| Event | Workflow Triggered | Purpose |
-|-------|-------------------|---------|
-| Push to feature branch | Test workflow | Verify code quality |
-| Pull request created | Test workflow (if needed) | Validate PR changes |
-| PR merged to main | Deploy workflow | Deploy production build |
-| Manual trigger with approval | Deploy workflow | Emergency deployments |
+| Event                        | Workflow Triggered        | Purpose                 |
+| ---------------------------- | ------------------------- | ----------------------- |
+| Push to feature branch       | Test workflow             | Verify code quality     |
+| Pull request created         | Test workflow (if needed) | Validate PR changes     |
+| PR merged to main            | Deploy workflow           | Deploy production build |
+| Manual trigger with approval | Deploy workflow           | Emergency deployments   |
 
 ---
 
@@ -164,31 +164,31 @@ Production Tests Run → Deploy to Azure Environment
 
 ### Pre-Merge Gates
 
-| Gate | Description | Enforced By |
-|------|-------------|-------------|
-| Linting passes | Code follows style guidelines | ESLint/Prettier |
-| Unit tests pass | Core functionality verified | Jest/Mocha/etc. |
-| Integration tests pass | System integration verified | Custom test suite |
-| Build succeeds | Application compiles correctly | Build toolchain |
-| Status checks pass | All automated validations pass | GitHub Actions |
+| Gate                   | Description                    | Enforced By       |
+| ---------------------- | ------------------------------ | ----------------- |
+| Linting passes         | Code follows style guidelines  | ESLint/Prettier   |
+| Unit tests pass        | Core functionality verified    | Jest/Mocha/etc.   |
+| Integration tests pass | System integration verified    | Custom test suite |
+| Build succeeds         | Application compiles correctly | Build toolchain   |
+| Status checks pass     | All automated validations pass | GitHub Actions    |
 
 ### Pre-Deployment Gates
 
-| Gate | Description | Enforced By |
-|------|-------------|-------------|
-| PR has approval(s) | Code reviewed by team | GitHub PR settings |
-| Main branch up to date | No merge conflicts | Automated check |
-| Production tests pass | Final validation suite | Test workflow |
-| Health checks pass | Service responds correctly | Custom health endpoints |
-| Smoke tests pass | Core functionality works | E2E test runner |
+| Gate                   | Description                | Enforced By             |
+| ---------------------- | -------------------------- | ----------------------- |
+| PR has approval(s)     | Code reviewed by team      | GitHub PR settings      |
+| Main branch up to date | No merge conflicts         | Automated check         |
+| Production tests pass  | Final validation suite     | Test workflow           |
+| Health checks pass     | Service responds correctly | Custom health endpoints |
+| Smoke tests pass       | Core functionality works   | E2E test runner         |
 
 ### Post-Deployment Gates
 
-| Gate | Description | Monitoring Tool |
-|------|-------------|-----------------|
-| No error spikes | Error rate within normal range | Azure Monitor |
-| Latency acceptable | Response times meet SLA | Application Insights |
-| Uptime maintained | 99.9%+ availability target | Metrics/Alerts |
+| Gate               | Description                    | Monitoring Tool      |
+| ------------------ | ------------------------------ | -------------------- |
+| No error spikes    | Error rate within normal range | Azure Monitor        |
+| Latency acceptable | Response times meet SLA        | Application Insights |
+| Uptime maintained  | 99.9%+ availability target     | Metrics/Alerts       |
 
 ---
 
@@ -196,10 +196,10 @@ Production Tests Run → Deploy to Azure Environment
 
 ### Environment Matrix
 
-| Environment | Purpose | URL Pattern | Access Level |
-|-------------|---------|-------------|--------------|
-| Development (dev) | Developer sandbox, integration testing | `dev.environment.app` | Internal only |
-| Production (prod) | Customer-facing, live traffic | `prod.environment.app` | Public with auth if needed |
+| Environment       | Purpose                                | URL Pattern            | Access Level               |
+| ----------------- | -------------------------------------- | ---------------------- | -------------------------- |
+| Development (dev) | Developer sandbox, integration testing | `dev.environment.app`  | Internal only              |
+| Production (prod) | Customer-facing, live traffic          | `prod.environment.app` | Public with auth if needed |
 
 ### Environment-Specific Configurations
 
@@ -225,11 +225,11 @@ Production:
 
 ### Secrets Management
 
-| Secret Type | Storage Location | Access Method |
-|-------------|-----------------|---------------|
-| Azure connection strings | Azure Key Vault | Managed identity |
-| API keys and tokens | Azure Key Vault | Service principal |
-| Deployment credentials | GitHub Actions secrets | Read-only access |
+| Secret Type              | Storage Location       | Access Method     |
+| ------------------------ | ---------------------- | ----------------- |
+| Azure connection strings | Azure Key Vault        | Managed identity  |
+| API keys and tokens      | Azure Key Vault        | Service principal |
+| Deployment credentials   | GitHub Actions secrets | Read-only access  |
 
 ### Network Security
 
@@ -251,12 +251,12 @@ Production:
 
 ### Metrics Collected
 
-| Metric | Source | Alert Threshold |
-|--------|--------|-----------------|
-| Deployment status | CI/CD pipeline | Failed deployment = Critical |
-| Application errors | App Insights | Error rate > 1% = Warning |
-| Response time | App Service | P95 > 2s = Warning |
-| Uptime | Health check endpoint | Down > 30s = Critical |
+| Metric             | Source                | Alert Threshold              |
+| ------------------ | --------------------- | ---------------------------- |
+| Deployment status  | CI/CD pipeline        | Failed deployment = Critical |
+| Application errors | App Insights          | Error rate > 1% = Warning    |
+| Response time      | App Service           | P95 > 2s = Warning           |
+| Uptime             | Health check endpoint | Down > 30s = Critical        |
 
 ### Logging Strategy
 
@@ -294,25 +294,25 @@ Production:
 
 ### Option 1: Blob Storage + Front Door (Monthly Production)
 
-| Resource | Estimated Cost |
-|----------|---------------|
-| Azure Blob Storage | $20-$50 |
-| Front Door | $50-$150 |
-| CDN Edge Caching | $30-$80 |
-| Azure SQL Database | $50-$150 |
-| App Insights | $10-$30 |
-| **Total** | **$160-$460** |
+| Resource           | Estimated Cost |
+| ------------------ | -------------- |
+| Azure Blob Storage | $20-$50        |
+| Front Door         | $50-$150       |
+| CDN Edge Caching   | $30-$80        |
+| Azure SQL Database | $50-$150       |
+| App Insights       | $10-$30        |
+| **Total**          | **$160-$460**  |
 
 ### Option 2: App Service (Monthly Production)
 
-| Resource | Estimated Cost |
-|----------|---------------|
-| App Service Plan | $100-$300 |
-| Azure Blob Storage | $20-$50 |
-| CDN (included in plan) | Included |
-| Azure SQL Database | $50-$150 |
-| App Insights | $10-$30 |
-| **Total** | **$180-$430** |
+| Resource               | Estimated Cost |
+| ---------------------- | -------------- |
+| App Service Plan       | $100-$300      |
+| Azure Blob Storage     | $20-$50        |
+| CDN (included in plan) | Included       |
+| Azure SQL Database     | $50-$150       |
+| App Insights           | $10-$30        |
+| **Total**              | **$180-$430**  |
 
 **Note:** Development costs are ~10% of production estimates for both options.
 
@@ -339,14 +339,14 @@ Production:
 
 ## Project Timeline (Current PoC Phase)
 
-| Phase | Duration | Status |
-|-------|----------|--------|
-| Setup & Documentation | Complete ✅ | Ready for use |
+| Phase                          | Duration      | Status                       |
+| ------------------------------ | ------------- | ---------------------------- |
+| Setup & Documentation          | Complete ✅    | Ready for use                |
 | Branch Strategy Implementation | In Progress 🚧 | Feature branches operational |
-| CI/CD Pipeline Configuration | In Progress 🚧 | Workflows deployed to GitHub |
-| Azure Resource Provisioning | Pending ⏳ | Next phase activity |
-| First Deployment Run | Pending ⏳ | Target: 2 weeks from now |
-| Production Approval Process | Pending ⏳ | Target: End of PoC phase |
+| CI/CD Pipeline Configuration   | In Progress 🚧 | Workflows deployed to GitHub |
+| Azure Resource Provisioning    | Pending ⏳     | Next phase activity          |
+| First Deployment Run           | Pending ⏳     | Target: 2 weeks from now     |
+| Production Approval Process    | Pending ⏳     | Target: End of PoC phase     |
 
 ---
 
@@ -378,12 +378,12 @@ Production:
 
 ## Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Direct commit to main | Low (enforced) | High | GitHub branch protection rules |
-| Deployment without approval | Very Low (enforced) | Critical | Workflow requires approval flag |
-| Test failures in prod | Very Low | Medium | Quality gates before deployment |
-| Unidentified security vulnerability | Low | Critical | Dependency scanning, regular audits |
+| Risk                                | Likelihood          | Impact   | Mitigation                          |
+| ----------------------------------- | ------------------- | -------- | ----------------------------------- |
+| Direct commit to main               | Low (enforced)      | High     | GitHub branch protection rules      |
+| Deployment without approval         | Very Low (enforced) | Critical | Workflow requires approval flag     |
+| Test failures in prod               | Very Low            | Medium   | Quality gates before deployment     |
+| Unidentified security vulnerability | Low                 | Critical | Dependency scanning, regular audits |
 
 ---
 
@@ -430,6 +430,6 @@ The PoC is ready for your review and stakeholder approval to proceed to the next
 
 ---
 
-*Last updated: 2026-09-09*  
+*Last updated: 2026-10-01*  
 **Document Version:** v0.1.0  
 **For questions, please see [docs/onboarding.md](<docs/onboarding.md>) or open a GitHub issue.**

@@ -65,10 +65,10 @@ npm test
 
 ```bash
 # Create branch from main
-git checkout -b feature/issue-XXX-description
+git checkout -b feature/XXX-description
 
 # Example:
-git checkout -b feature/issue-123-fix-login-timeout
+git checkout -b feature/123-fix-login-timeout
 ```
 
 ### Step 3: Make Your Changes
@@ -80,7 +80,7 @@ git add .
 git commit -m "feat(login): implement retry logic for high-latency networks"
 
 # Push to trigger CI
-git push origin feature/issue-123-fix-login-timeout
+git push origin feature/123-fix-login-timeout
 ```
 
 ### Step 4: Wait for Tests
@@ -286,13 +286,13 @@ az appservice log tail \
 
 ### Resources
 
-| Resource | Purpose |
-|----------|---------|
-| [README.md](<README.md>) | Overview and objectives |
+| Resource                                                       | Purpose                  |
+| -------------------------------------------------------------- | ------------------------ |
+| [README.md](<README.md>)                                       | Overview and objectives  |
 | [docs/architecture-summary.md](<docs/architecture-summary.md>) | Azure deployment options |
-| [docs/assumptions.md](<docs/assumptions.md>) | Organizational context |
-| [docs/workflow-guidelines.md](<docs/workflow-guidelines.md>) | Workflow procedures |
-| [CHANGELOG.md](<CHANGELOG.md>) | Release notes |
+| [docs/assumptions.md](<docs/assumptions.md>)                   | Organizational context   |
+| [docs/workflow-guidelines.md](<docs/workflow-guidelines.md>)   | Workflow procedures      |
+| [CHANGELOG.md](<CHANGELOG.md>)                                 | Release notes            |
 
 ### Communication Channels
 
