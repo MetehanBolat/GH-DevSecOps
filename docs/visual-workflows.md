@@ -1,6 +1,6 @@
 # Visual Workflows
 
-This document contains detailed visual diagrams of the CI/CD pipeline workflows for the PoC repository.
+This document contains detailed visual diagrams of the CI/CD pipeline workflows for the PoC repository. All Terraform operations (plan and apply) are now consolidated in [`cd.yml`](../.github/workflows/cd.yml).
 
 ---
 
@@ -199,7 +199,15 @@ flowchart LR
 
 ---
 
-## 3. Deployment Pipeline Architecture
+## 3. Deployment Pipeline Architecture with Consolidated Release
+
+The deployment pipeline orchestrates both infrastructure and application changes through a single [`cd.yml`](../.github/workflows/cd.yml) workflow, which now includes Terraform plan and apply steps:
+
+```
+cd.yml flow:
+dev-terraform-plan → dev-terraform-apply → dev-build → dev-deploy →
+prod-terraform-plan → prod-terraform-apply → prod-build → prod-deploy
+```
 
 ```mermaid
 graph TB

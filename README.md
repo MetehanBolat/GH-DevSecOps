@@ -29,8 +29,8 @@ download, and App Service deployment.
 - Environment-specific SPA packages stored in a private Azure Blob Storage
   `release` container.
 - Ordered application promotion:
-  Development build -> Development deploy -> Production build ->
-  Production deploy.
+  **Development**: tf-plan → tf-apply → build → deploy
+  **Production**: tf-plan → tf-apply → build → deploy
 - Azure authentication from GitHub Actions using OpenID Connect (OIDC)
   instead of stored Azure credentials.
 - Production approval through the protected GitHub `Production` environment.
@@ -45,16 +45,9 @@ small static site to focus on the release and DevSecOps workflows.
 | [`src/`](src/)                                                                         | Static SPA source: `index.html`, `styles.css`, and `script.js`.                            |
 | [`iac/`](iac/)                                                                         | Root Terraform configuration, environment backends/variables, and the reusable SPA module. |
 | [`scripts/drift_check.py`](scripts/drift_check.py)                                     | Collects issue, PR, patch, and final-file evidence for the issue drift check.              |
-| [`.github/workflows/ci.yml`](.github/workflows/ci.yml)                                 | Validates site files and JavaScript, scans for secrets, and scans workflows.               |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml)                                 | Validates site files, JavaScript syntax, secrets, and workflow security                     |
 | [`.github/workflows/drift-check.yml`](.github/workflows/drift-check.yml)               | Checks whether a pull request implements its linked issue.                                 |
-| [`.github/workflows/cd.yml`](.github/workflows/cd.yml)                                 | Application release entry workflow.                                                        |
-| [`.github/workflows/_template-build.yml`](.github/workflows/_template-build.yml)       | Reusable environment-specific build and Blob Storage upload workflow.                      |
-| [`.github/workflows/_template-deploy.yml`](.github/workflows/_template-deploy.yml)     | Reusable Blob Storage download and App Service deployment workflow.                        |
-| [`.github/workflows/tf-plan.yml`](.github/workflows/tf-plan.yml)                       | Terraform plan entry workflow for Development and Production.                              |
-| [`.github/workflows/tf-apply.yml`](.github/workflows/tf-apply.yml)                     | Ordered Terraform apply entry workflow.                                                    |
-| [`.github/workflows/_template-tf-plan.yml`](.github/workflows/_template-tf-plan.yml)   | Reusable Terraform plan workflow.                                                          |
-| [`.github/workflows/_template-tf-apply.yml`](.github/workflows/_template-tf-apply.yml) | Reusable Terraform apply workflow.                                                         |
-| [`docs/`](docs/)                                                                       | Setup, architecture, assumptions, and detailed release documentation.                      |
+| [`.github/workflows/cd.yml`](.github/workflows/cd.yml)                                 | Complete application release pipeline with Terraform plan/apply, build, and deploy         |
 
 ## Delivery lifecycle
 
@@ -62,69 +55,35 @@ small static site to focus on the release and DevSecOps workflows.
 flowchart LR
     ISSUE[GitHub issue] --> BRANCH["feature/<issue-number>-<short-name>"]
     BRANCH --> PR[Pull request to main]
-    PR --> CHECKS[CI, security, Terraform plan, issue drift check]
+    PR --> CHECKS[CI, security, workflow security scanning]
     CHECKS --> REVIEW[Required review and CODEOWNER approval]
     REVIEW --> MERGE[Merge to protected main]
-    MERGE --> INFRA[Terraform apply]
-    MERGE --> APP[Application release]
-    INFRA --> DEVINFRA[Development infrastructure]
-    DEVINFRA -->|success| PRODINFRA[Production infrastructure]
-    APP --> DEVAPP[Development build and deploy]
-    DEVAPP -->|success| PRODAPP[Production build and deploy]
+    MERGE --> CD[cd.yml pipeline]
+    CD --> DEV_INFRA["dev-terraform-plan<br/>dev-terraform-apply"]
+    CD --> DEV_BUILD["dev-build<br/>checkout, customize, ZIP, upload"]
+    CD --> DEV_DEPLOY["dev-deploy<br/>download ZIP, deploy App Service"]
+    DEV_DEPLOY --> PROD_INFRA["prod-terraform-plan<br/>prod-terraform-apply"]
+    PROD_INFRA --> PROD_BUILD["prod-build<br/>checkout, customize, ZIP, upload"]
+    PROD_BUILD --> PROD_DEPLOY["prod-deploy<br/>download ZIP, deploy App Service"]
 ```
 
-There are no long-lived `dev` or `prod` branches. GitHub environments provide
-deployment isolation and approval gates, while workflow dependencies enforce
-the promotion order.
+All Terraform operations (plan and apply) are now consolidated in [cd.yml](.github/workflows/cd.yml), which runs on pushes to `main` or manual dispatch. The pipeline enforces the complete flow for each environment:
 
-## Pull-request checks
+1. **Development environment**:
+   - `dev-terraform-plan`: Runs Terraform plan for dev infrastructure
+   - `dev-terraform-apply`: Applies dev infrastructure changes
+   - `dev-build`: Builds the dev site (checkout, update environment label, create ZIP)
+   - `dev-deploy`: Deploys to dev App Service
 
-The [CI workflow](.github/workflows/ci.yml) runs for pull requests to `main`
-and pushes to `main`. It:
+2. **Production environment**:
+   - `prod-terraform-plan`: Runs Terraform plan for prod infrastructure (starts after dev-deploy succeeds)
+   - `prod-terraform-apply`: Applies prod infrastructure changes
+   - `prod-build`: Builds the prod site
+   - `prod-deploy`: Deploys to prod App Service
 
-1. Checks that the required SPA files exist and that `index.html` references
-   the JavaScript file.
-2. Checks JavaScript syntax with `node --check`.
-3. Scans for accidentally committed secrets with Gitleaks.
-4. Scans GitHub Actions workflows with Zizmor.
-5. Requires pull requests to originate from a `feature/*` branch.
+The workflow automatically promotes from development to production only after successful deployment of each stage.
 
-The [issue drift check](.github/workflows/drift-check.yml) runs for opened,
-synchronized, reopened, and ready-for-review pull requests. It extracts the
-issue number from the feature branch, retrieves issue and pull-request
-evidence from GitHub, and asks the configured OpenAI-compatible endpoint
-whether the final repository state satisfies the issue. A non-aligned result
-fails the check.
-
-The drift check can also be started manually with a pull request number and
-one of the configured models. It requires `OPENAI_API_KEY` as a secret and
-`OPENAI_API_URL` as a GitHub Actions variable.
-
-## Infrastructure workflow
-
-Terraform is split into entry workflows and reusable templates:
-
-```mermaid
-flowchart LR
-    PLAN[tf-plan.yml] --> PLANDEV[Development plan]
-    PLAN --> PLANPROD[Production plan]
-    APPLY[tf-apply.yml] --> APPLYDEV[Development apply]
-    APPLYDEV -->|success| APPLYPROD[Production apply]
-```
-
-The root Terraform configuration in [`iac/`](iac/) instantiates the SPA
-module for the selected environment. The module provisions:
-
-- An Azure resource group.
-- An Azure App Service plan.
-- An Azure App Service for the SPA.
-- An application storage account with a private `release` container.
-- Blob data permissions for the deployment identity.
-
-Terraform state is stored remotely in Azure and is not committed to Git.
-See [`iac/README.md`](iac/README.md) for generated Terraform module details.
-
-## Application release
+## Application release (cd.yml workflow)
 
 The [application release workflow](.github/workflows/cd.yml) runs on pushes to
 `main` and manual dispatches:
@@ -132,11 +91,26 @@ The [application release workflow](.github/workflows/cd.yml) runs on pushes to
 ```mermaid
 flowchart LR
     START[Push to main or manual dispatch]
-    START --> DB["dev-build<br/>checkout, customize, ZIP, upload"]
+    START --> DT["dev-terraform-plan<br/>dev-terraform-apply"]
+    DT --> DB["dev-build<br/>checkout, customize, ZIP, upload"]
     DB --> DD["dev-deploy<br/>download ZIP, deploy App Service"]
-    DD -->|success| PB["prod-build<br/>checkout, customize, ZIP, upload"]
+    DD --> PT["prod-terraform-plan<br/>prod-terraform-apply"]
+    PT --> PB["prod-build<br/>checkout, customize, ZIP, upload"]
     PB --> PD["prod-deploy<br/>download ZIP, deploy App Service"]
 ```
+
+Each Terraform plan:
+
+1. Checks out the repository with full history.
+2. Runs `terraform init` to initialize providers and backend.
+3. Runs `terraform plan` to show infrastructure changes.
+4. Outputs a plan file for review and approval.
+
+Each Terraform apply:
+
+1. Reads the plan from Terraform state.
+2. Applies the approved changes with `-auto-approve`.
+3. Uses OIDC to authenticate with Azure using the required secrets.
 
 Each build:
 
@@ -157,8 +131,8 @@ Each deploy:
 
 The ZIP is handed from build to deploy through its filename and Blob Storage;
 it is not passed as a GitHub Actions artifact. Production starts only after
-the complete Development build and deployment succeeds. The detailed
-step-by-step diagrams, artifact lifecycle, configuration, and rollback notes
+the complete Development build and deployment succeeds (including Terraform).
+The detailed step-by-step diagrams, artifact lifecycle, configuration, and rollback notes
 are in [docs/release-flow.md](docs/release-flow.md).
 
 ## Required GitHub configuration
@@ -198,4 +172,5 @@ See [docs/assumptions.md](docs/assumptions.md) for the full assumptions list.
 - [DevSecOps Automation Setup](docs/DEVSECOPS-AUTOMATION-SETUP.md)
 - [Architecture summary](docs/architecture-summary.md)
 - [Assumptions](docs/assumptions.md)
-- [Terraform module documentation](iac/README.md)
+- [Workflow guidelines](docs/workflow-guidelines.md)
+- [Visual workflows](docs/visual-workflows.md)

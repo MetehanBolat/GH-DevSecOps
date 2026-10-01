@@ -2,9 +2,9 @@
 
 The application is a static single-page web app. The CI/CD process builds an
 environment-specific package, stores the immutable ZIP in Azure Blob Storage,
-and deploys it to Azure App Service through GitHub Actions. Terraform plans
-and applies use reusable workflow templates, which call local composite
-actions for the Terraform commands.
+and deploys it to Azure App Service through GitHub Actions. Terraform plan and
+apply are consolidated in [`cd.yml`](../.github/workflows/cd.yml) with reusable
+workflow templates calling local composite actions for the Terraform commands.
 
 ## Application hosting: Azure App Service
 
@@ -44,29 +44,28 @@ The application storage account is separate from the remote Terraform state
 storage account. Terraform state uses the `tfstate` container; application
 packages use the private `release` container. The deployment identity receives
 `Storage Blob Data Contributor` on the `release` container so the workflows can
-upload and download packages without storage keys. State is not committed to
-Git.
+upload and download packages without storage keys. State is not committed to Git.
 
 ## Release orchestration
 
-The entry workflows enforce promotion order after a merge to `main`:
+The [`cd.yml`](../.github/workflows/cd.yml) workflow enforces promotion order after a merge to `main`:
 
 ```mermaid
 flowchart LR
-    TA[tf-apply.yml] --> TD[dev apply]
-    TD -->|success| TP[prod apply]
+    CD["cd.yml"] --> TPLAN["dev-terraform-plan<br/>dev-terraform-apply"]
+    TPLAN --> BUILD["dev-build<br/>checkout, customize, ZIP, upload"]
+    BUILD --> DEPLOYDEV["dev-deploy<br/>download ZIP, deploy App Service"]
+    DEPLOYDEV --> TPLANPROD["prod-terraform-plan<br/>prod-terraform-apply"]
+    TPLANPROD --> BUILDPROD["prod-build<br/>checkout, customize, ZIP, upload"]
+    BUILDPROD --> DEPLOYPROD["prod-deploy<br/>download ZIP, deploy App Service"]
 ```
 
-```mermaid
-flowchart LR
-    CD["cd.yml"] --> DB["dev-build<br/>checkout, customize, ZIP, upload"]
-    DB --> DD["dev-deploy<br/>download ZIP, deploy App Service"]
-    DD -->|success| PB["prod-build<br/>checkout, customize, ZIP, upload"]
-    PB --> PD["prod-deploy<br/>download ZIP, deploy App Service"]
-```
+The workflow consolidates Terraform operations with application release:
+- **Infrastructure stream**: `dev-terraform-plan` → `dev-terraform-apply` → `prod-terraform-plan` → `prod-terraform-apply`
+- **Application stream**: `dev-build` → `dev-deploy` → `prod-build` → `prod-deploy`
 
 The reusable Terraform, build, and deploy workflows provide the
-environment-specific implementation. The entry workflows provide the
+environment-specific implementation. The orchestration workflow provides the
 promotion dependencies. This keeps templates reusable while ensuring that
 Production cannot run in parallel with, or get ahead of, Development.
 For the step-by-step release sequence, see the

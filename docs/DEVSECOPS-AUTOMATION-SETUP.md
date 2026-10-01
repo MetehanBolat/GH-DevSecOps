@@ -8,35 +8,37 @@ The continuous deployment entry point is
 [`cd.yml`](../.github/workflows/cd.yml). It calls the reusable
 [`_template-build.yml`](../.github/workflows/_template-build.yml) and
 [`_template-deploy.yml`](../.github/workflows/_template-deploy.yml) workflows
-for the Development and Production environments.
-
-Terraform uses the same two-layer pattern. The
-[`tf-plan.yml`](../.github/workflows/tf-plan.yml) and
-[`tf-apply.yml`](../.github/workflows/tf-apply.yml) entry points call
-[`_template-tf-plan.yml`](../.github/workflows/_template-tf-plan.yml)
+for the Development and Production environments,
+together with
+[`terraform-plan-template.yml`](../.github/workflows/terraform-plan-template.yml)
 and
-[`_template-tf-apply.yml`](../.github/workflows/_template-tf-apply.yml).
+[`terraform-apply-template.yml`](../.github/workflows/terraform-apply-template.yml).
+
 Those reusable workflows provide the job-level configuration and call the
-local Terraform composite actions for the Terraform commands.
+local Terraform composite actions for the Terraform commands. The
+orchestration workflow enforces promotion order: Infrastructure (plan → apply)
+promotes from dev to prod, then Application (build → deploy) promotes from dev
+to prod.
 
 ## Promotion flow
 
 Pull requests run CI, security checks, Terraform plan, and the Issue Drift
-Check. A merge to protected `main` starts the two ordered release flows:
+Check. A merge to protected `main` starts the consolidated release flow in
+[`cd.yml`](../.github/workflows/cd.yml):
 
 ```mermaid
 flowchart LR
-    MAIN[Merge to main] --> TFDEV[tf-apply: dev]
-    TFDEV -->|success| TFPROD[tf-apply: prod]
+    MAIN[Merge to main] --> DT[cd: dev-terraform-plan<br/>dev-terraform-apply]
+    DT --> DB[cd: dev-build]
+    DB --> DD[cd: dev-deploy]
+    DD --> PT[cd: prod-terraform-plan<br/>prod-terraform-apply]
+    PT --> PB[cd: prod-build]
+    PB --> PD[cd: prod-deploy]
 ```
 
-```mermaid
-flowchart LR
-    MAIN[Merge to main] --> DB[cd: dev-build]
-    DB --> DD[dev-deploy]
-    DD -->|success| PB[prod-build]
-    PB --> PD[prod-deploy]
-```
+The workflow consolidates Terraform operations with application release:
+- **Infrastructure stream**: `dev-terraform-plan` → `dev-terraform-apply` → `prod-terraform-plan` → `prod-terraform-apply`
+- **Application stream**: `dev-build` → `dev-deploy` → `prod-build` → `prod-deploy`
 
 The Terraform flow applies Development before Production. The application
 flow builds and deploys Development before building and deploying Production.
@@ -99,20 +101,15 @@ the [application release flow](release-flow.md).
    reading the PR's changed files and final file contents, and returning its
    alignment summary.
 3. Show validation, JavaScript syntax checking, secret scanning, and workflow scanning.
-4. Merge into `main` and show the Terraform plan/apply jobs using the
-   environment-specific `dev` and `prod` variable files.
-5. Show `dev-build` and `dev-deploy` creating, uploading, downloading, and
-   deploying the Development package.
-6. Show `prod-build` and `prod-deploy` doing the same for Production only
-   after the Development deployment succeeds.
-7. Demonstrate the Production approval gate and redeploy a previous immutable
+4. Merge into `main` and show the consolidated release flow in [`cd.yml`](../.github/workflows/cd.yml):
+   - Show `dev-terraform-plan` and `dev-terraform-apply` updating dev infrastructure.
+   - Show `dev-build` and `dev-deploy` creating, uploading, downloading, and
+     deploying the Development package.
+   - Show `prod-terraform-plan` and `prod-terraform-apply` updating prod
+     infrastructure only after dev-deploy succeeds.
+   - Show `prod-build` and `prod-deploy` doing the same for Production.
+5. Demonstrate the Production approval gate and redeploy a previous immutable
    package when a rollback is required.
 
 The workflows use GitHub OIDC and environment-scoped configuration. No Azure
 credentials or storage keys are stored in the repository.
-
-The Terraform plan workflow can also be started manually with an optional
-working directory and a selected `dev` or `prod` environment. The Terraform
-apply workflow can be started manually with an optional working directory;
-it applies `dev` first and then `prod` through their corresponding GitHub
-environments.
