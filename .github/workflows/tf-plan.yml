@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  dev-plan:
+  dev:
     permissions:
       contents: read #read repository content
       id-token: write #write id tokens
@@ -38,7 +38,7 @@ jobs:
       instance_directory: ${{ inputs.instanceDirectory || './iac' }}
     secrets: inherit
 
-  prod-plan:
+  prod:
     permissions:
       contents: read #read repository content
       id-token: write #write id tokens
